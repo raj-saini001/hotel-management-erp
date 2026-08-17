@@ -39,7 +39,7 @@ export const UpcomingBookings = () => {
   const paginatedBookings = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const handleDeleteConfirm = async () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget || deleteLoading) return;
     try {
       setDeleteLoading(true);
       await deleteBooking(deleteTarget.id);

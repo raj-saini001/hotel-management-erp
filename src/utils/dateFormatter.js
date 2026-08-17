@@ -24,6 +24,14 @@ export const formatDateTime = (dateString) => {
 
 export const calculateDays = (checkIn, checkOut) => {
   if (!checkIn || !checkOut) return 1;
+  const parts1 = String(checkIn).split('-').map(Number);
+  const parts2 = String(checkOut).split('-').map(Number);
+  if (parts1.length === 3 && parts2.length === 3) {
+    const utc1 = Date.UTC(parts1[0], parts1[1] - 1, parts1[2]);
+    const utc2 = Date.UTC(parts2[0], parts2[1] - 1, parts2[2]);
+    const diffDays = Math.round((utc2 - utc1) / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 1;
+  }
   const start = new Date(checkIn);
   const end = new Date(checkOut);
   const diffTime = end.getTime() - start.getTime();

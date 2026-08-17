@@ -2,19 +2,25 @@ import React, { useState } from 'react';
 import { Menu, Sun, Moon, Bell, Search, LogOut, ChevronDown, CheckCircle, ShieldAlert } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
+import { useSettings } from '../../hooks/useSettings';
+import { formatCurrency } from '../../utils/dateFormatter';
 import { Button } from '../common/Button';
 
 export const Navbar = ({ onToggleSidebar, onToggleMobileSidebar, onOpenSearch }) => {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { settings } = useSettings();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
+  const symbol = settings?.currencySymbol || '$';
+
   const notifications = [
     { id: 1, title: 'New Check-in', desc: 'Lucas Vance checked into Room 304', time: '10m ago', unread: true },
-    { id: 2, title: 'Payment Received', desc: '$1,000 received for BK-1002 via UPI', time: '1h ago', unread: true },
+    { id: 2, title: 'Payment Received', desc: `${formatCurrency(1000, symbol)} received for BK-1002 via UPI`, time: '1h ago', unread: true },
     { id: 3, title: 'System Alert', desc: 'GST parameters updated by Admin', time: '3h ago', unread: false },
   ];
+
 
   return (
     <header className="sticky top-0 z-20 h-16 bg-white/80 dark:bg-navy-900/80 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 px-4 lg:px-6 flex items-center justify-between transition-colors">

@@ -1,48 +1,58 @@
-import { delay } from './api';
-import { getStorageItem } from './mockData';
+import { supabase } from '../lib/supabase';
+import { transformBookingFromDb } from './bookingService';
 
 export const reportService = {
   getReportData: async ({ type = 'monthly', startDate, endDate } = {}) => {
-    await delay(300);
-    const bookings = getStorageItem('hotel_bookings', []);
+    let query = supabase.from('bookings').select('*, payments(*), invoices(*)').order('check_in', { ascending: false });
 
-    let filtered = [...bookings];
     const now = new Date();
     const todayStr = now.toISOString().split('T')[0];
     const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     const yearStr = String(now.getFullYear());
 
     if (startDate && endDate) {
-      filtered = filtered.filter((b) => {
-        const date = b.checkIn || b.bookingDate;
-        return date >= startDate && date <= endDate;
-      });
+      query = query.gte('check_in', startDate).lte('check_in', endDate);
     } else if (type === 'daily') {
-      filtered = filtered.filter((b) => (b.checkIn || b.bookingDate) === todayStr);
+      query = query.eq('check_in', todayStr);
     } else if (type === 'monthly') {
-      filtered = filtered.filter((b) => (b.checkIn || b.bookingDate || '').startsWith(monthStr));
+      query = query.gte('check_in', `${monthStr}-01`).lte('check_in', `${monthStr}-31`);
     } else if (type === 'yearly') {
-      filtered = filtered.filter((b) => (b.checkIn || b.bookingDate || '').startsWith(yearStr));
+      query = query.gte('check_in', `${yearStr}-01-01`).lte('check_in', `${yearStr}-12-31`);
     }
 
-    const totalRevenue = filtered
+    const { data: rawBookings, error } = await query;
+
+    if (error) {
+      console.error('[reportService] Error fetching report data from Supabase:', error);
+      throw new Error(error.message || 'Failed to generate report statement');
+    }
+
+    const bookings = (rawBookings || []).map(transformBookingFromDb);
+
+    const totalRevenue = bookings
       .filter((b) => b.bookingStatus !== 'Cancelled')
       .reduce((sum, b) => sum + (Number(b.totalAmount) || 0), 0);
 
-    const paidRevenue = filtered
+    const paidRevenue = bookings
       .filter((b) => b.bookingStatus !== 'Cancelled')
-      .reduce((sum, b) => sum + (Number(b.advanceAmount) || 0) + (b.paymentStatus === 'Paid' ? Number(b.remainingAmount) || 0 : 0), 0);
+      .reduce(
+        (sum, b) =>
+          sum +
+          (Number(b.advanceAmount) || 0) +
+          (b.paymentStatus === 'Paid' ? Number(b.remainingAmount) || 0 : 0),
+        0
+      );
 
-    const cancelledCount = filtered.filter((b) => b.bookingStatus === 'Cancelled').length;
+    const cancelledCount = bookings.filter((b) => b.bookingStatus === 'Cancelled').length;
 
     return {
       type,
-      totalBookings: filtered.length,
+      totalBookings: bookings.length,
       cancelledCount,
       totalRevenue,
       paidRevenue,
-      pendingRevenue: totalRevenue - paidRevenue,
-      bookings: filtered,
+      pendingRevenue: totalRevenue - paidRevenue > 0 ? totalRevenue - paidRevenue : 0,
+      bookings,
     };
   },
 };

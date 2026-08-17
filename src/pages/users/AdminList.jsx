@@ -63,19 +63,21 @@ export const AdminList = () => {
   };
 
   const handleDeleteConfirm = async () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget || actionLoading) return;
     try {
       setActionLoading(true);
       await userService.deleteAdmin(deleteTarget.id);
+      setAdmins((prev) => prev.filter((a) => a.id !== deleteTarget.id));
       toast.success(`Deleted ${deleteTarget.name}`);
       setDeleteTarget(null);
       await fetchAdmins();
     } catch (err) {
-      toast.error('Failed to delete admin');
+      toast.error(err.message || 'Failed to delete admin');
     } finally {
       setActionLoading(false);
     }
   };
+
 
   if (loading && (!admins || admins.length === 0)) {
     return <Loader text="Loading staff administrators..." />;

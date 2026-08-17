@@ -7,6 +7,7 @@ import { Select } from '../common/Select';
 import { Button } from '../common/Button';
 import { adminFormSchema } from '../../utils/validationSchemas';
 import { ADMIN_ROLES, PERMISSIONS_LIST } from '../../utils/constants';
+import toast from 'react-hot-toast';
 
 export const AdminFormModal = ({ isOpen, onClose, initialValues, onSubmit, loading = false }) => {
   const isEditing = !!initialValues;
@@ -50,6 +51,14 @@ export const AdminFormModal = ({ isOpen, onClose, initialValues, onSubmit, loadi
     }
   }, [initialValues, reset, isOpen]);
 
+  const handleFormSubmit = (data) => {
+    if (!isEditing && (!data.password || data.password.trim().length < 6)) {
+      toast.error('Staff password must be at least 6 characters long');
+      return;
+    }
+    onSubmit(data);
+  };
+
   return (
     <Modal
       isOpen={isOpen}
@@ -58,13 +67,38 @@ export const AdminFormModal = ({ isOpen, onClose, initialValues, onSubmit, loadi
       subtitle="Configure account access credentials and permission scopes"
       maxWidth="max-w-xl"
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <Input label="Full Name" required placeholder="e.g. Sarah Connor" error={errors.name?.message} {...register('name')} />
-        <Input label="Email Address" required type="email" placeholder="e.g. sarah@grandstay.com" error={errors.email?.message} {...register('email')} />
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+        <Input
+          label="Full Name"
+          required
+          placeholder="e.g. Sarah Connor"
+          error={errors.name?.message}
+          {...register('name')}
+        />
+        <Input
+          label="Email Address"
+          required
+          type="email"
+          placeholder="e.g. sarah@grandstay.com"
+          error={errors.email?.message}
+          {...register('email')}
+        />
 
         <div className="grid grid-cols-2 gap-4">
-          <Select label="Role" required options={ADMIN_ROLES} error={errors.role?.message} {...register('role')} />
-          <Select label="Account Status" required options={['Active', 'Inactive']} error={errors.status?.message} {...register('status')} />
+          <Select
+            label="Role"
+            required
+            options={ADMIN_ROLES}
+            error={errors.role?.message}
+            {...register('role')}
+          />
+          <Select
+            label="Account Status"
+            required
+            options={['Active', 'Inactive']}
+            error={errors.status?.message}
+            {...register('status')}
+          />
         </div>
 
         <Input
@@ -82,7 +116,10 @@ export const AdminFormModal = ({ isOpen, onClose, initialValues, onSubmit, loadi
           </label>
           <div className="space-y-2 p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
             {PERMISSIONS_LIST.map((p) => (
-              <label key={p.id} className="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
+              <label
+                key={p.id}
+                className="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-300 cursor-pointer"
+              >
                 <input
                   type="checkbox"
                   value={p.id}
@@ -93,7 +130,11 @@ export const AdminFormModal = ({ isOpen, onClose, initialValues, onSubmit, loadi
               </label>
             ))}
           </div>
-          {errors.permissions && <span className="text-xs font-medium text-rose-500 mt-1 block">{errors.permissions.message}</span>}
+          {errors.permissions && (
+            <span className="text-xs font-medium text-rose-500 mt-1 block">
+              {errors.permissions.message}
+            </span>
+          )}
         </div>
 
         <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">

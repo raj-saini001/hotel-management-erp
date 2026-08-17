@@ -25,31 +25,45 @@ export const AppRoutes = () => {
       {/* Public Route */}
       <Route path="/login" element={<Login />} />
 
-      {/* Private Guarded Routes */}
+      {/* Authenticated Application Guard */}
       <Route element={<PrivateRoute />}>
         <Route element={<DashboardLayout />}>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
 
-          {/* Booking Routes */}
-          <Route path="/bookings/add" element={<AddBooking />} />
-          <Route path="/bookings/history" element={<BookingHistory />} />
-          <Route path="/bookings/upcoming" element={<UpcomingBookings />} />
-          <Route path="/bookings/completed" element={<CompletedBookings />} />
-          <Route path="/bookings/cancelled" element={<CancelledBookings />} />
-          <Route path="/bookings/invoice/:id" element={<Invoice />} />
+          {/* Booking Routes Guarded by manage_bookings */}
+          <Route element={<PrivateRoute requiredPermission="manage_bookings" />}>
+            <Route path="/bookings/add" element={<AddBooking />} />
+            <Route path="/bookings/history" element={<BookingHistory />} />
+            <Route path="/bookings/upcoming" element={<UpcomingBookings />} />
+            <Route path="/bookings/completed" element={<CompletedBookings />} />
+            <Route path="/bookings/cancelled" element={<CancelledBookings />} />
+            <Route path="/bookings/invoice/:id" element={<Invoice />} />
+          </Route>
 
-          {/* Reports & Analytics */}
-          <Route path="/reports" element={<Reports />} />
-          <Route path="/analytics" element={<Analytics />} />
+          {/* Reports Guarded by view_reports */}
+          <Route element={<PrivateRoute requiredPermission="view_reports" />}>
+            <Route path="/reports" element={<Reports />} />
+          </Route>
 
-          {/* User Management */}
-          <Route path="/users/add" element={<AddAdmin />} />
-          <Route path="/users/list" element={<AdminList />} />
+          {/* Analytics Guarded by view_analytics */}
+          <Route element={<PrivateRoute requiredPermission="view_analytics" />}>
+            <Route path="/analytics" element={<Analytics />} />
+          </Route>
 
-          {/* Activity & Settings */}
+          {/* User Management Guarded by manage_admins */}
+          <Route element={<PrivateRoute requiredPermission="manage_admins" />}>
+            <Route path="/users/add" element={<AddAdmin />} />
+            <Route path="/users/list" element={<AdminList />} />
+          </Route>
+
+          {/* Settings Guarded by manage_settings */}
+          <Route element={<PrivateRoute requiredPermission="manage_settings" />}>
+            <Route path="/settings" element={<Settings />} />
+          </Route>
+
+          {/* Activity & Profile */}
           <Route path="/activity" element={<ActivityLogs />} />
-          <Route path="/settings" element={<Settings />} />
           <Route path="/profile" element={<Profile />} />
         </Route>
       </Route>

@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Building2, Lock, User, KeyRound, CheckCircle2 } from 'lucide-react';
+import { Building2, Lock, User } from 'lucide-react';
 import { loginSchema } from '../../utils/validationSchemas';
 import { useAuth } from '../../hooks/useAuth';
 import { useSettings } from '../../hooks/useSettings';
@@ -12,10 +12,17 @@ import { Button } from '../../components/common/Button';
 import toast from 'react-hot-toast';
 
 export const Login = () => {
-  const { login } = useAuth();
+  const { login, isAuthenticated, loading: authLoading } = useAuth();
   const { settings } = useSettings();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+
+  // If already authenticated, redirect to dashboard
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, authLoading, navigate]);
 
   const {
     register,
@@ -35,8 +42,9 @@ export const Login = () => {
     try {
       setLoading(true);
       await login(data.username, data.password);
-      toast.success('Welcome to Grand Stay ERP Staff Portal!');
+      toast.success(`Welcome to ${settings?.hotelName || HOTEL_INFO.name} ERP Staff Portal!`);
       navigate('/dashboard');
+
     } catch (err) {
       toast.error(err.message || 'Invalid credentials');
     } finally {
@@ -104,7 +112,14 @@ export const Login = () => {
                 />
                 <span>Remember Session</span>
               </label>
-              <a href="#help" onClick={(e) => { e.preventDefault(); toast.error('Please contact Super Admin for password reset.'); }} className="text-brand-600 dark:text-brand-400 hover:underline">
+              <a
+                href="#help"
+                onClick={(e) => {
+                  e.preventDefault();
+                  toast.error('Please contact Super Admin for password reset.');
+                }}
+                className="text-brand-600 dark:text-brand-400 hover:underline"
+              >
                 Forgot Password?
               </a>
             </div>
@@ -148,8 +163,9 @@ export const Login = () => {
 
         {/* Footer Note */}
         <p className="text-center text-xs text-slate-400 mt-6">
-          Authorized Staff Personnel Only • Grand Stay Hotel ERP v1.0
+          Authorized Staff Personnel Only • {settings?.hotelName || HOTEL_INFO.name} ERP v1.0
         </p>
+
       </div>
     </div>
   );

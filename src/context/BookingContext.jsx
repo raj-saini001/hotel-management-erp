@@ -55,6 +55,7 @@ export const BookingProvider = ({ children }) => {
   const deleteBooking = async (id) => {
     try {
       await bookingService.deleteBooking(id);
+      setBookings((prev) => prev.filter((b) => b.id !== id));
       toast.success('Booking deleted successfully');
       await fetchBookings();
     } catch (err) {
@@ -62,6 +63,7 @@ export const BookingProvider = ({ children }) => {
       throw err;
     }
   };
+
 
   return (
     <BookingContext.Provider

@@ -23,17 +23,19 @@ import {
   X,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { usePermissions } from '../../hooks/usePermissions';
 import { useSettings } from '../../hooks/useSettings';
 import { HOTEL_INFO } from '../../utils/constants';
 
 export const Sidebar = ({ isMobileOpen, setIsMobileOpen, isCollapsed }) => {
   const { user, logout } = useAuth();
+  const { canAccess } = usePermissions();
   const { settings } = useSettings();
   const location = useLocation();
   const [bookingMenuOpen, setBookingMenuOpen] = useState(true);
   const [userMenuOpen, setUserMenuOpen] = useState(true);
 
-  const navItems = [
+  const rawNavItems = [
     { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     {
       label: 'Booking Management',
@@ -65,6 +67,19 @@ export const Sidebar = ({ isMobileOpen, setIsMobileOpen, isCollapsed }) => {
     { label: 'Settings', path: '/settings', icon: Settings },
     { label: 'Profile', path: '/profile', icon: User },
   ];
+
+  // Dynamically filter menu items according to user permissions
+  const navItems = rawNavItems
+    .map((item) => {
+      if (item.submenu) {
+        const allowedSubmenu = item.submenu.filter((sub) => canAccess(sub.path));
+        if (allowedSubmenu.length === 0) return null;
+        return { ...item, submenu: allowedSubmenu };
+      }
+      return canAccess(item.path) ? item : null;
+    })
+    .filter(Boolean);
+
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full bg-white dark:bg-navy-900 border-r border-slate-200/80 dark:border-slate-800/80 transition-all duration-300">

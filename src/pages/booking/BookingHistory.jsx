@@ -67,7 +67,7 @@ export const BookingHistory = () => {
   };
 
   const handleDeleteConfirm = async () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget || deleteLoading) return;
     try {
       setDeleteLoading(true);
       await deleteBooking(deleteTarget.id);
